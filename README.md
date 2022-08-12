@@ -36,7 +36,7 @@ Install using go module in your project
 	})
 
 	//2. Build a permission role
-	adminAccess := middleware.RealmAccess("admin").ResourceAccess().EchoGuard()
+	adminAccess := middleware.RealmAccess("admin_access").ResourceAccess("login").EchoGuard()
 
 	e := echo.New()
 
