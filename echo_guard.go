@@ -4,7 +4,7 @@ import "fmt"
 import "github.com/labstack/echo/v4"
 
 //EchoGuard set up the echo middleware and access
-func (m keyCloakMiddleware) EchoGuard() echo.MiddlewareFunc {
+func (m keyCloakMiddleware) EchoGuard(hook ...EchoHook) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			keyCloakENV := m.config
@@ -22,6 +22,17 @@ func (m keyCloakMiddleware) EchoGuard() echo.MiddlewareFunc {
 			_, claims, err := m.goCloak.DecodeAccessToken(ctx.Request().Context(), accessToken, keyCloakENV.Realm)
 			if err != nil {
 				return err
+			}
+
+			for _, h := range hook {
+				err = h(ctx, claims)
+				if err != nil {
+					return err
+				}
+			}
+
+			if len(m.realmAccess) < 1 && len(m.resourceAccess) < 1 {
+				return next(ctx)
 			}
 
 			isValid := false

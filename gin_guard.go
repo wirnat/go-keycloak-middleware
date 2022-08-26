@@ -8,16 +8,17 @@ import (
 	"strings"
 )
 
+
+
 //GinGuard set up the gin middleware and access
-func (m keyCloakMiddleware) GinGuard() gin.HandlerFunc {
+func (m keyCloakMiddleware) GinGuard(ginHook ...GinHook) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		keyCloakENV := m.config
 
-		accessToken := ctx.Request.Header.Get("Title")
-
+		accessToken := ctx.Request.Header.Get("Authorization")
 		info, err := m.goCloak.RetrospectToken(ctx.Request.Context(), accessToken, keyCloakENV.ClientID, keyCloakENV.ClientSecret, keyCloakENV.Realm)
 		if err != nil {
-			response.UnauthorizedFailDetail("invalid token", "your token has been inactive", ctx)
+			response.UnauthorizedFailDetail("invalid token", err.Error(), ctx)
 			return
 		}
 		if *info.Active == false {
@@ -31,23 +32,43 @@ func (m keyCloakMiddleware) GinGuard() gin.HandlerFunc {
 			return
 		}
 
+		errs := []string{}
+
+		for _, hook := range ginHook {
+			err=hook(ctx,claims)
+			if err != nil {
+				response.UnauthorizedFailDetail(errs, err.Error(), ctx)
+				return
+			}
+		}
+
 		isValid := false
+
+		if len(m.realmAccess)<1&& len(m.resourceAccess)<1 {
+			isValid=true
+		}
+
 		err = m.validateResourceAccess(*claims)
 		if err == nil {
 			isValid = true
+		} else {
+			errs = append(errs, err.Error())
 		}
 
 		err = m.validateRealmAccess(*claims)
 		if err == nil {
 			isValid = true
+		} else {
+			errs = append(errs, err.Error())
 		}
 
 		if isValid {
 			ctx.Next()
+			return
+		} else {
+			response.UnauthorizedFailDetail(errs, "you doesn't have access to this endpoint", ctx)
+			return
 		}
-
-		response.UnauthorizedFailDetail("forbidden access", "you doesn't have access to this endpoint", ctx)
-		return
 	}
 }
 
