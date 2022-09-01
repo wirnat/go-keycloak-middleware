@@ -1,14 +1,9 @@
 package keycloak_middleware
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/wirnat/go-keycloak-middleware/response"
-	"strings"
 )
-
-
 
 //GinGuard set up the gin middleware and access
 func (m keyCloakMiddleware) GinGuard(ginHook ...GinHook) gin.HandlerFunc {
@@ -16,15 +11,15 @@ func (m keyCloakMiddleware) GinGuard(ginHook ...GinHook) gin.HandlerFunc {
 		keyCloakENV := m.config
 
 		accessToken := ctx.Request.Header.Get("Authorization")
-		info, err := m.goCloak.RetrospectToken(ctx.Request.Context(), accessToken, keyCloakENV.ClientID, keyCloakENV.ClientSecret, keyCloakENV.Realm)
-		if err != nil {
-			response.UnauthorizedFailDetail("invalid token", err.Error(), ctx)
-			return
-		}
-		if *info.Active == false {
-			response.UnauthorizedFailDetail("invalid token", "your token has been inactive", ctx)
-			return
-		}
+		//info, err := m.goCloak.RetrospectToken(ctx.Request.Context(), accessToken, keyCloakENV.ClientID, keyCloakENV.ClientSecret, keyCloakENV.Realm)
+		//if err != nil {
+		//	response.UnauthorizedFailDetail("invalid token", err.Error(), ctx)
+		//	return
+		//}
+		//if *info.Active == false {
+		//	response.UnauthorizedFailDetail("invalid token", "your token has been inactive", ctx)
+		//	return
+		//}
 
 		_, claims, err := m.goCloak.DecodeAccessToken(ctx.Request.Context(), accessToken, keyCloakENV.Realm)
 		if err != nil {
@@ -35,7 +30,7 @@ func (m keyCloakMiddleware) GinGuard(ginHook ...GinHook) gin.HandlerFunc {
 		errs := []string{}
 
 		for _, hook := range ginHook {
-			err=hook(ctx,claims)
+			err = hook(ctx, claims)
 			if err != nil {
 				response.UnauthorizedFailDetail(errs, err.Error(), ctx)
 				return
@@ -44,18 +39,18 @@ func (m keyCloakMiddleware) GinGuard(ginHook ...GinHook) gin.HandlerFunc {
 
 		isValid := false
 
-		if len(m.realmAccess)<1&& len(m.resourceAccess)<1 {
-			isValid=true
+		if len(m.realmAccess) < 1 && len(m.resourceAccess) < 1 {
+			isValid = true
 		}
 
-		err = m.validateResourceAccess(*claims)
+		err = m.ValidateResourceAccess(*claims)
 		if err == nil {
 			isValid = true
 		} else {
 			errs = append(errs, err.Error())
 		}
 
-		err = m.validateRealmAccess(*claims)
+		err = m.ValidateRealmAccess(*claims)
 		if err == nil {
 			isValid = true
 		} else {
@@ -70,61 +65,4 @@ func (m keyCloakMiddleware) GinGuard(ginHook ...GinHook) gin.HandlerFunc {
 			return
 		}
 	}
-}
-
-func (m keyCloakMiddleware) validateResourceAccess(claims jwt.MapClaims) error {
-	for _, clientRole := range m.resourceAccess {
-		for _, s := range clientRole {
-			data := strings.Split(s, ".")
-			if len(data) < 2 {
-				return fmt.Errorf("client not found, example: ms-item.write")
-			}
-
-			clientID := data[0]
-			permittedRole := data[1]
-
-			accessMap, ok := claims["resource_access"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			accessRole, ok := accessMap[clientID]
-			if !ok {
-				continue
-			}
-
-			listRole, _ := accessRole.(map[string]interface{})["roles"].([]interface{})
-			for _, r := range listRole {
-				role, _ := r.(string)
-				if role == permittedRole {
-					return nil
-				}
-			}
-		}
-	}
-	return fmt.Errorf("forbidden access")
-
-}
-
-func (m keyCloakMiddleware) validateRealmAccess(claims jwt.MapClaims) (err error) {
-	for _, clientRole := range m.realmAccess {
-		for _, s := range clientRole {
-			permittedRole := s
-
-			accessMap, ok := claims["realm_access"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			listRole, _ := accessMap["roles"].([]interface{})
-			for _, r := range listRole {
-				role, _ := r.(string)
-				if role == permittedRole {
-					return nil
-				}
-			}
-		}
-	}
-
-	return fmt.Errorf("forbidden access")
 }
