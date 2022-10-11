@@ -1,6 +1,9 @@
 package keycloak_middleware
 
-import "github.com/labstack/echo/v4"
+import (
+	"fmt"
+	"github.com/labstack/echo/v4"
+)
 
 //EchoGuard set up the echo middleware and access
 func (m keyCloakMiddleware) EchoGuard(hook ...EchoHook) echo.MiddlewareFunc {
@@ -10,13 +13,15 @@ func (m keyCloakMiddleware) EchoGuard(hook ...EchoHook) echo.MiddlewareFunc {
 
 			accessToken := ctx.Request().Header.Get("Authorization")
 
-			//info, err := m.goCloak.RetrospectToken(ctx.Request().Context(), accessToken, keyCloakENV.ClientID, keyCloakENV.ClientSecret, keyCloakENV.Realm)
-			//if err != nil {
-			//	return err
-			//}
-			//if *info.Active == false {
-			//	return fmt.Errorf("invalid token")
-			//}
+			if keyCloakENV.RetrospectingToken {
+				info, err := m.goCloak.RetrospectToken(ctx.Request().Context(), accessToken, keyCloakENV.ClientID, keyCloakENV.ClientSecret, keyCloakENV.Realm)
+				if err != nil {
+					return err
+				}
+				if *info.Active == false {
+					return fmt.Errorf("invalid token")
+				}
+			}
 
 			_, claims, err := m.goCloak.DecodeAccessToken(ctx.Request().Context(), accessToken, keyCloakENV.Realm)
 			if err != nil {
