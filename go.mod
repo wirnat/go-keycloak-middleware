@@ -3,7 +3,7 @@ module github.com/wirnat/go-keycloak-middleware
 go 1.18
 
 require (
-	github.com/Nerzal/gocloak/v11 v11.2.0
+	github.com/Nerzal/gocloak/v12 v12.0.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/google/uuid v1.3.0
@@ -11,7 +11,6 @@ require (
 )
 
 require (
-	github.com/Nerzal/gocloak/v12 v12.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
