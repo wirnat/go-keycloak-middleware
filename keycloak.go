@@ -1,6 +1,6 @@
 package keycloak_middleware
 
-import "github.com/Nerzal/gocloak/v11"
+import "github.com/Nerzal/gocloak/v12"
 
 type keyCloakMiddleware struct {
 	goCloak        gocloak.GoCloak
@@ -11,7 +11,7 @@ type keyCloakMiddleware struct {
 
 func NewKeyCloakMiddleware(config KeyCloakConfig) *keyCloakMiddleware {
 	goCloak := gocloak.NewClient(config.KeyCloakIP)
-	return &keyCloakMiddleware{goCloak: goCloak, config: config}
+	return &keyCloakMiddleware{goCloak: *goCloak, config: config}
 }
 
 //ResourceAccess validate resource access permission, args mean OR
