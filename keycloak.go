@@ -9,8 +9,8 @@ type keyCloakMiddleware struct {
 	realmAccess    [][]string
 }
 
-func NewKeyCloakMiddleware(config KeyCloakConfig) *keyCloakMiddleware {
-	goCloak := gocloak.NewClient(config.KeyCloakIP)
+func NewKeyCloakMiddleware(config KeyCloakConfig, options ...func(cloak *gocloak.GoCloak)) *keyCloakMiddleware {
+	goCloak := gocloak.NewClient(config.KeyCloakIP, options...)
 	return &keyCloakMiddleware{goCloak: *goCloak, config: config}
 }
 
