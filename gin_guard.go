@@ -21,7 +21,7 @@ func (m keyCloakMiddleware) GinGuard(ginHook ...GinHook) gin.HandlerFunc {
 		//	return
 		//}
 
-		_, claims, err := m.goCloak.DecodeAccessToken(ctx.Request.Context(), accessToken, keyCloakENV.Realm)
+		_, claims, err := m.GoCloak.DecodeAccessToken(ctx.Request.Context(), accessToken, keyCloakENV.Realm)
 		if err != nil {
 			response.UnauthorizedFailDetail("decode token failed", "your token is invalid", ctx)
 			return
