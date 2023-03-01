@@ -16,7 +16,6 @@ func main() {
 
 	//TODO: Build a permission role
 	adminAccess := middleware.RealmAccess("admin").ResourceAccess().EchoGuard()
-
 	e := echo.New()
 	//TODO: implement it to your route
 	e.POST("login", func(c echo.Context) error {

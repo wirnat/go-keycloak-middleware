@@ -14,7 +14,7 @@ func (m keyCloakMiddleware) EchoGuard(hook ...EchoHook) echo.MiddlewareFunc {
 			accessToken := ctx.Request().Header.Get("Authorization")
 
 			if keyCloakENV.RetrospectingToken {
-				info, err := m.goCloak.RetrospectToken(ctx.Request().Context(), accessToken, keyCloakENV.ClientID, keyCloakENV.ClientSecret, keyCloakENV.Realm)
+				info, err := m.GoCloak.RetrospectToken(ctx.Request().Context(), accessToken, keyCloakENV.ClientID, keyCloakENV.ClientSecret, keyCloakENV.Realm)
 				if err != nil {
 					return err
 				}
@@ -23,7 +23,7 @@ func (m keyCloakMiddleware) EchoGuard(hook ...EchoHook) echo.MiddlewareFunc {
 				}
 			}
 
-			_, claims, err := m.goCloak.DecodeAccessToken(ctx.Request().Context(), accessToken, keyCloakENV.Realm)
+			_, claims, err := m.GoCloak.DecodeAccessToken(ctx.Request().Context(), accessToken, keyCloakENV.Realm)
 			if err != nil {
 				return err
 			}
